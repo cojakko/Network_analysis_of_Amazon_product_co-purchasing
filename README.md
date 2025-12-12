@@ -1,65 +1,97 @@
 # Network_analysis_of_Amazon_product_co-purchasing
 Scalable Big Data analysis project utilizing PySpark and GraphFrames for network mining, with graph visualizations rendered in Gephi.
-# Amazon Big Data & Smart Analytics Project
 
 ![Big Data](https://img.shields.io/badge/Big%20Data-PySpark-E25A1C?style=for-the-badge&logo=apachespark)
 ![Graph Analysis](https://img.shields.io/badge/Graph%20Analysis-GraphFrames-2C3E50?style=for-the-badge)
 ![Visualization](https://img.shields.io/badge/Visualization-Gephi-00539F?style=for-the-badge)
 
 ## Project Overview
-This project is a scalable **Big Data Analysis** solution designed to mine insights from large-scale e-commerce networks. By leveraging **PySpark** and **GraphFrames**, we analyze the Amazon co-purchasing network ("Customers who bought X also bought Y") to uncover hidden product relationships, community structures, and influential items.
+This project performs a large-scale analysis of the **Amazon product co-purchasing network** using **PySpark** and **GraphFrames**. By modeling the data as a directed graph where nodes represent products and edges represent "Customers who bought this item also bought..." relationships, we uncover hidden patterns in consumer behavior, identify influential products, and generate recommendation strategies.
 
-The analysis transforms raw transactional data into actionable business strategies, ranging from revenue optimization to inventory management, with final network structures visualized using **Gephi**.
+The analysis leverages distributed computing to handle massive datasets, moving from basic structural metrics to advanced link prediction algorithms.
+
+## Datasets
+The project utilizes the Stanford Network Analysis Project (SNAP) datasets:
+
+1.  **Network Graph (`amazon0505.txt.gz`)**:
+    * **Nodes**: 410,236 products.
+    * **Edges**: 3,356,824 directed links (co-purchases).
+    * **Format**: Adjacency list.
+
+2.  **Product Metadata (`amazon-meta.txt.gz`)**:
+    * **Enrichment**: Adds semantic layers to the graph.
+    * **Attributes**: ASIN, Title, Product Category (Group), and Sales Rank.
+    * **Goal**: To interpret graph metrics in business terms (e.g., "What category is this central node?").
 
 ## Tech Stack & Tools
-The project is built on a high-performance distributed computing stack:
-* **Core Engine**: **PySpark (Apache Spark 3.5.0)** for distributed data processing.
-* **Graph Analytics**: **GraphFrames** for motif finding, PageRank, and community detection.
-* **Network Visualization**: **Gephi** for rendering complex graph topologies and community clusters.
-* **EDA & Charts**: **Plotly** & **Seaborn** for statistical data exploration.
-* **Environment**: Google Colab (OpenJDK 8 headless environment).
+* **Core Engine**: Apache Spark (PySpark 3.5.0).
+* **Graph Processing**: GraphFrames (for parallel graph algorithms).
+* **Environment**: Google Colab (with OpenJDK 8 setup).
+* **Visualization**:
+    * `Matplotlib` & `Seaborn` (Statistical distributions).
+    * `NetworkX` (Subgraph visualization).
+    * `Plotly` (Interactive visualizations, e.g., Treemaps).
 
-## Dataset Stats
-The analysis is performed on the massive SNAP Amazon Co-purchasing Network:
-* **Nodes (Products)**: 410,236
-* **Edges (Co-purchases)**: 3,356,824
-* **Metadata Enriched**: SalesRank, Categories (Books, Music, DVD), and Titles.
+## Analysis Pipeline
 
-## Graph Algorithms & Analysis
-We implemented advanced graph algorithms to derive structural insights:
-1.  **Degree Centrality**: Identifying "Hub" products (high Out-Degree) and "Bestsellers" (high In-Degree) to map market structure.
-2.  **PageRank**: Ranking product importance to optimize search results and recommendation feeds.
-3.  **Triangle Counting (Motif Detection)**: Detecting tightly-knit product triplets for bundle pricing strategies.
-4.  **Connected Components**: Understanding graph connectivity for better navigation experience.
+### 1. Data Loading & Graph Construction
+* **Setup**: Configuration of Spark Session with GraphFrames JARs.
+* **Parsing**: Cleaning raw text data to build the Edge DataFrame (`src`, `dst`) and Vertex DataFrame.
+* **Enrichment**: Parsing unstructured metadata to map Product IDs to real-world names and categories (Books, Music, DVDs).
 
-## Business Impact & ROI
-The technical analysis translates directly into strategic business value:
+### 2. Exploratory Data Analysis (EDA)
+* **Degree Distribution**: Calculating **In-Degree** (Popularity) and **Out-Degree** (Generosity).
+* **The "Long Tail"**: Visualizing the Power Law distribution (Log-Log plots) to confirm the **Pareto Principle (80/20 rule)** in product sales.
+* **Correlation**: Analyzing the relationship between Graph Centrality (In-Degree) and Real-world Sales Rank.
 
-### Revenue Optimization
-* **Bundle Pricing**: Leveraging triangle motifs to create high-conversion product bundles.
-* **Cross-Selling**: Promoting high-PageRank products to maximize downstream sales.
-* **Conversion**: Personalized recommendations ("Next Best Offer") to improve cart value.
+### 3. Structural Analysis & Influence
+* **PageRank Algorithm**:
+    * Identified the "Influencers" of the Amazon catalog.
+    * Distinguished between simple popularity (Degree) and strategic importance (PageRank).
+* **Connected Components**:
+    * Analyzed the "Giant Component" to assess network navigability.
+    * **Business Value**: Ensuring users don't get stuck in "dead-end" product silos.
 
-### Operational Efficiency
-* **Inventory Management**: Optimizing stock levels based on Degree Distribution and PageRank centrality.
-* **Warehouse Placement**: Co-locating frequently bundled products (triangles) to reduce picking time.
-* **Dead Stock Reduction**: Identifying isolated products for clearance strategies.
+### 4. Motif Analysis (Patterns & Bundles)
+* **Triangle Counting**: Identifying triplets of products often bought together.
+    * *Insight*: Triangles represent strong "Product Bundles" opportunities.
+* **Feed-Forward Loops**: Detecting hierarchical patterns (Gateway Product $\to$ Intermediate $\to$ Niche).
+* **Reciprocal Links**: Identifying mutual recommendations for cross-selling strategies.
 
-### Customer Experience
-* **Navigation**: Enhancing discovery through the analysis of the Giant Component.
-* **Relevance**: Using Personalized PageRank for hyper-relevant suggestions.
+### 5. Link Prediction (Recommendation Engine)
+* **Common Neighbors**:
+    * "Friends of friends" logic to predict missing links.
+    * **Logic**: If Product A and Product C both share neighbor B, A and C are likely related.
+* **Jaccard Similarity (MinHash LSH)**:
+    * Content-based filtering approximation.
+    * Handling the "Twin Leaves" paradox (products with 100% identical neighbors).
 
-## Visualization
-* **Gephi**: Used to visualize the "Giant Component" and community clusters, providing a macro-view of the product ecosystem.
-* **Tremeaps**: Visualizing category distribution (Books, Music, Videos) using Plotly.
+## Key Business Insights
+
+The analysis translated technical graph metrics into actionable business strategies:
+
+### 1. Revenue Optimization
+* **Bundle Pricing**: Utilizing **Triangle Motifs** to create discounted 3-product bundles, increasing Average Order Value (AOV).
+* **Influencer Marketing**: Promoting high-**PageRank** products on landing pages to maximize downstream traffic flow.
+
+### 2. Operational Efficiency
+* **Inventory Management**: Using **Degree Distribution** to forecast demand. High-degree "Hubs" require deeper stock, while low-degree "Tail" items are candidates for drop-shipping.
+* **Warehouse Placement**: Co-locating products found in **Reciprocal Links** to reduce picking/packing time.
+
+### 3. Customer Experience
+* **Discovery**: Using **Feed-Forward Loops** to guide users from generic bestsellers to specific, high-margin niche products.
+* **Navigation**: Improving the connectivity of the **Giant Component** to ensure users never hit a "dead end" while browsing.
+
+### 4. Strategic Planning
+* **Competitive Analysis**: Using **Rank Gap** analysis in triangles to identify if a bestseller is boosting a competitor's niche product.
+* **Expansion**: Detecting isolated communities to find underserved customer segments.
 
 ## How to Run
-1.  **Setup Environment**: Install dependencies via the provided setup script:
-    ```python
-    !pip install pyspark==3.5.0 graphframes
-    ```
-2.  **Load Data**: Ensure `amazon0505.txt.gz` and `amazon-meta.txt.gz` are uploaded to your Drive.
-3.  **Execute Pipeline**: Run the notebook to build the GraphFrame and execute the analytics pipeline.
+1.  Open the notebook in **Google Colab**.
+2.  Ensure `amazon0505.txt.gz` and `amazon-meta.txt.gz` are uploaded to your Google Drive path defined in the setup.
+3.  Run the **Setup** cell to install PySpark and download the GraphFrames JAR.
+4.  Execute cells sequentially to reproduce the analysis.
 
 ---
 *Author: Gabriele Goglia*
+*Dataset Credit: J. Leskovec et al. (SNAP - Stanford Network Analysis Project)*
