@@ -1,4 +1,4 @@
-# Network_analysis_of_Amazon_product_co-purchasing
+# Amazon Product Network Analysis
 Scalable Big Data analysis project utilizing PySpark and GraphFrames for network mining, with graph visualizations rendered in Gephi.
 
 ![Big Data](https://img.shields.io/badge/Big%20Data-PySpark-E25A1C?style=for-the-badge&logo=apachespark)
